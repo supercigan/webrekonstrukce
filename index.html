@@ -819,6 +819,43 @@
       background: #4a8cff;
     }
 
+    /* ── FORM SUCCESS ────────────────────────────────── */
+    .form-success {
+      display: none;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      margin-top: 56px;
+      padding: 52px 48px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      animation: vapourIn 0.7s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .form-success.visible { display: flex; }
+
+    .form-success-icon {
+      width: 56px; height: 56px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(41,121,255,0.1);
+      border-radius: 14px;
+    }
+
+    .form-success-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin: 0;
+    }
+
+    .form-success-sub {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
     /* ── CO DOSTANETE ────────────────────────────────── */
     .deliverables {
       list-style: none;
@@ -1196,7 +1233,7 @@
 
       <h2 class="reveal reveal-delay-1">Začněme spolupracovat</h2>
 
-      <form action="https://formspree.io/f/mzdkazrq" method="POST" class="reveal reveal-delay-2">
+      <form id="contact-form" action="https://formspree.io/f/mzdkazrq" method="POST" class="reveal reveal-delay-2">
         <div class="form-row">
           <div class="form-group">
             <label for="name">Jméno a příjmení</label>
@@ -1270,6 +1307,16 @@
           </svg>
         </button>
       </form>
+
+      <div id="form-success" class="form-success" aria-live="polite">
+        <div class="form-success-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M5 14l7 7L23 7" stroke="#2979FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3 class="form-success-title">Zpráva odeslána.</h3>
+        <p class="form-success-sub">Ozveme se brzy.</p>
+      </div>
     </div>
   </section>
 
@@ -1394,6 +1441,44 @@
     }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
 
     document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // ── FORM SUBMIT (fetch) ───────────────────────────
+    const contactForm    = document.getElementById('contact-form');
+    const formSuccess    = document.getElementById('form-success');
+    const submitBtn      = contactForm.querySelector('.submit-btn');
+
+    contactForm.addEventListener('submit', async e => {
+      e.preventDefault();
+
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.6';
+
+      try {
+        const res = await fetch(contactForm.action, {
+          method: 'POST',
+          body: new FormData(contactForm),
+          headers: { 'Accept': 'application/json' },
+        });
+
+        if (res.ok) {
+          contactForm.style.transition = 'opacity 0.4s, transform 0.4s';
+          contactForm.style.opacity    = '0';
+          contactForm.style.transform  = 'translateY(12px)';
+          setTimeout(() => {
+            contactForm.style.display = 'none';
+            formSuccess.classList.add('visible');
+          }, 400);
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          alert('Něco se pokazilo. Zkuste to prosím znovu.');
+        }
+      } catch {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        alert('Nepodařilo se odeslat zprávu. Zkontrolujte připojení.');
+      }
+    });
 
     // ── LENIS SMOOTH SCROLL ───────────────────────────
     const lenis = new Lenis({
